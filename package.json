@@ -4,7 +4,7 @@
   "private": false,
   "description": "Font customization for DeepSeek Harness: override the Web and desktop UI font stack and the monospace/code font stack with any standard CSS font-family list",
   "license": "MIT",
-  "author": "Chenyufan",
+  "author": "vanvanhasnophi",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -20,13 +20,13 @@
     "typography",
     "ui"
   ],
-  "homepage": "https://github.com/Chenyufan/dsh-font-stack#readme",
+  "homepage": "https://github.com/vanvanhasnophi/dsh-custom-font#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Chenyufan/dsh-font-stack.git"
+    "url": "git+https://github.com/vanvanhasnophi/dsh-custom-font.git"
   },
   "bugs": {
-    "url": "https://github.com/Chenyufan/dsh-font-stack/issues"
+    "url": "https://github.com/vanvanhasnophi/dsh-custom-font/issues"
   },
   "exports": {
     ".": "./src/host.js",
@@ -35,12 +35,15 @@
   },
   "files": [
     "src",
+    "scripts",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "node test/font-css.check.mjs && node test/client-module.check.mjs"
+    "test": "node test/font-css.check.mjs && node test/client-module.check.mjs",
+    "set-repository": "node scripts/set-repository.mjs",
+    "prepublishOnly": "npm test"
   },
   "publishConfig": {
     "access": "public",

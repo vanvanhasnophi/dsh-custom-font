@@ -2,6 +2,9 @@
 
 给 DeepSeek Harness 自定义字体的插件：在设置里输入**任意标准 CSS 字体栈**，覆盖整个界面与代码块的字体。[Web 端](http://127.0.0.1:19387) 与桌面端同时生效。
 
+- 仓库：<https://github.com/vanvanhasnophi/dsh-custom-font>
+- npm 包名：`dsh-font-stack`（npm 上 `dsh-custom-font` 已被同名的另一个插件占用，故包名与仓库名不同）
+
 ## 功能
 
 - **界面字体栈**：覆盖 UI 正文字体（导航、侧边栏、会话内容、设置页）。
@@ -46,7 +49,7 @@ Harness 的主题表把字体集中在一组自定义属性上，本插件覆盖
 **从 GitHub 装**（`install_bundle` 接受 git 地址）：
 
 ```
-plugin_manager install_bundle github:Chenyufan/dsh-font-stack
+plugin_manager install_bundle github:vanvanhasnophi/dsh-custom-font
 ```
 
 **从 npm 装**（发布后）：
@@ -58,7 +61,7 @@ plugin_manager install_bundle dsh-font-stack
 **从本地目录装**（开发时）：
 
 ```
-plugin_manager install_bundle C:\path\to\dsh-font-stack
+plugin_manager install_bundle C:\path\to\dsh-custom-font
 ```
 
 > 安装目标 profile 无法指定：`plugin_manager` 只管理当前运行应用所属的 profile。要让**另一个** profile 也生效，需要单独装一次——把 `"dsh-font-stack": "link:<绝对路径>"`（或 npm / git 地址）加进该 profile 的 `package.json`，把 `dsh-font-stack` 追加到它的 `dsh.profile.bundles`，然后在该 profile 目录执行 `pnpm install`。
@@ -68,12 +71,28 @@ plugin_manager install_bundle C:\path\to\dsh-font-stack
 ### 从源码开发
 
 ```powershell
-git clone https://github.com/Chenyufan/dsh-font-stack.git
-cd dsh-font-stack
+git clone https://github.com/vanvanhasnophi/dsh-custom-font.git
+cd dsh-custom-font
 npm test
 ```
 
 测试只用 Node 内置模块，**无需安装任何依赖**。
+
+### 维护者：改仓库地址与发布
+
+仓库地址写死在 `package.json` 的 `homepage` / `repository` / `bugs` 里，用脚本改，别手改 JSON：
+
+```powershell
+npm run set-repository                                   # 用脚本里的默认值
+$env:DSH_FONT_STACK_REPO='owner/repo'; npm run set-repository
+```
+
+发布到 npm（包名 `dsh-font-stack`，需要先 `npm login`）：
+
+```powershell
+npm publish          # prepublishOnly 会先跑测试；publishConfig 指向 registry.npmjs.org 并开启 provenance
+npm pack --dry-run   # 只看打包内容，不发布
+```
 
 ## 结构
 
