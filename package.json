@@ -1,0 +1,79 @@
+{
+  "name": "dsh-font-stack",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Font customization for DeepSeek Harness: override the Web and desktop UI font stack and the monospace/code font stack with any standard CSS font-family list",
+  "license": "MIT",
+  "author": "Chenyufan",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "font",
+    "font-family",
+    "font-stack",
+    "typography",
+    "ui"
+  ],
+  "homepage": "https://github.com/Chenyufan/dsh-font-stack#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chenyufan/dsh-font-stack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Chenyufan/dsh-font-stack/issues"
+  },
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/font-css.check.mjs && node test/client-module.check.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-locale": "*",
+    "@deepseek-ai/dsh-client-ui-slots": "*",
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-client-locale": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-slots": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  }
+}

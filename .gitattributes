@@ -1,0 +1,6 @@
+# Normalize to LF in the repository so the published bundle behaves identically
+# on every platform. The Client half is served verbatim to the browser by the
+# harness module loader, so CRLF is not worth the risk.
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
