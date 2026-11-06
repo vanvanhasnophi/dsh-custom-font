@@ -1,8 +1,8 @@
 {
   "name": "dsh-font-stack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
-  "description": "Font customization for DeepSeek Harness: override the Web and desktop UI font stack and the monospace/code font stack with any standard CSS font-family list",
+  "description": "Font customization for DeepSeek Harness: override the Web and desktop UI, conversation, and monospace/code font stacks with any standard CSS font-family list",
   "license": "MIT",
   "author": "vanvanhasnophi",
   "type": "module",

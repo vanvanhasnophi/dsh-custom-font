@@ -1,14 +1,14 @@
 # dsh-font-stack
 
-给 DeepSeek Harness 自定义字体的插件：在设置里输入**任意标准 CSS 字体栈**，覆盖整个界面与代码块的字体。[Web 端](http://127.0.0.1:19387) 与桌面端同时生效。
+给 DeepSeek Harness 自定义字体的插件：在设置里输入**任意标准 CSS 字体栈**，覆盖整个界面、会话内容与代码块的字体。Web 端与桌面端同时生效。
 
 - 仓库：<https://github.com/vanvanhasnophi/dsh-custom-font>
 - npm 包名：`dsh-font-stack`（npm 上 `dsh-custom-font` 已被同名的另一个插件占用，故包名与仓库名不同）
 
 ## 功能
 
-- **界面字体栈**：覆盖 UI 正文字体（导航、侧边栏、会话内容、设置页）。
-- **等宽字体栈**：覆盖代码块与行内代码的字体。
+- **界面字体栈**：覆盖 UI 正文、导航、侧边栏、设置页，以及会话内容（输入框、模型回复）。
+- **等宽字体栈**：覆盖代码块、行内代码与工具输出。
 - 4 个快速预设（系统默认 / Inter / 中文优先 / 衬线），以及「恢复默认」。
 - 实时预览：输入时立刻看到两种字体的真实效果。
 - 即时生效：改完无需刷新页面，当前窗口立即换字。
@@ -22,7 +22,7 @@
 
    ```
    Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif
-   '"JetBrains Mono", "Cascadia Code", Consolas, monospace'
+   "JetBrains Mono", "Cascadia Code", Consolas, monospace
    ```
 
    字段就是 CSS `font-family` 的值，直接照 CSS 语法写即可（带空格的字体名请用引号）。
@@ -30,17 +30,21 @@
 
 ## 覆盖了哪些 CSS 变量
 
-Harness 的主题表把字体集中在一组自定义属性上，本插件覆盖其中三个，因此覆盖面完整而侵入面最小：
+Harness 的主题表把字体集中在一组自定义属性上。本插件在 `html, body` 上同时写两代变量，所以新旧版本都能覆盖到会话内容：
 
 | 变量 | 作用 |
 | --- | --- |
-| `--dsw-font-family` | 界面正文；`body` 通过 `var(--dsw-font-family, …)` 继承它，Markdown 标题的 `font:` 简写也由它兜底 |
-| `--ds-font-family-code` | 代码块与行内代码 |
-| `--dsw-font-markdown-code-font-family` | Markdown 代码族的字体变量 |
+| `--dsh-font-family-text` | 0.2.2 起的正文字体钩子；官方「正文字体」设置会把它写到 `body` |
+| `--dsw-font-family` | 界面正文；`body` 从正文字体钩子重新派生它，输入框与 Markdown 回复都读这个值 |
+| `--dsh-font-family-code` | 0.2.2 起的代码字体钩子 |
+| `--ds-font-family-code` | 代码块、行内代码、工具输出 |
+| `--dsw-font-markdown-code-font-family` | Markdown 代码族变量（0.2.2 中由 `--ds-font-family-code` 派生） |
 
-覆盖声明写在 `html` 上并带 `!important`：官方基础表把这三项声明在 `:root`，`html` 的特异性高于 `:root`，因此用户值必然取胜，不依赖样式表加载顺序。
+覆盖声明写在 `html, body` 上并带 `!important`。这是 0.1.1 的关键修复：0.2.2 把 `--dsw-font-family` 与 `--ds-font-family-code` 的声明从 `:root` 挪到了 `body`，并从上面两个 `--dsh-font-family-*` 钩子重新派生。`body` 上的直接声明会压过从 `html` 继承来的值——**即使 `html` 那条是 `!important`**——所以旧版只写 `html` 的做法在 0.2.2 里进不了输入框和模型回复。现在插件把同一组变量也写到 `body`，用 `!important` 压过基础表的 `body` 规则，并同时写入两个新钩子，使插件在官方字体设置与插件同时使用时仍然取插件值。
 
-**刻意不覆盖**：KaTeX 数学字体（`.katex` 自带的 `font-family` 没有 `!important`，对后代强加字体会破坏公式排版）、终端（`@deepseek-ai/dsh-client-ui-sidebar-terminal` 给 xterm 写死了 `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace` 与固定 `fontSize: 13`，不读任何 CSS 变量），以及代码高亮 token 的颜色。等宽字体栈只影响 Markdown 与工具卡片里的代码。设置行里的「强制覆盖组件字体」开关会把界面字体栈以 `!important` 直接写到 `html, body`，仅在所选字体不生效时使用——它同样刻意不波及 `.katex`。
+**与官方字体设置的关系**：0.2.2 在「设置 → 通用 → 字号大小」的展开区里已经提供官方的正文字体 / 代码字体 / 终端字体输入框。两者可以并存；启用本插件时以本插件的字体栈为准，关闭或恢复默认后回到官方设置。
+
+**刻意不覆盖**：KaTeX 数学字体（`.katex` 自带的 `font-family` 没有 `!important`，对后代强加字体会破坏公式排版）、终端（0.2.2 起终端字体由 Host 设置经 `theme.fontFamilies.terminal` 直接交给 xterm，不经过 CSS，插件无法覆盖），以及代码高亮 token 的颜色。等宽字体栈只影响 Markdown 代码与工具输出。设置行里的「强制覆盖组件字体」开关会把界面字体栈以 `!important` 直接写到 `html, body` 的 `font-family` 上，仅在所选字体不生效时使用——它同样刻意不波及 `.katex`。
 
 ## 安装
 
@@ -94,6 +98,13 @@ npm publish          # prepublishOnly 会先跑测试；publishConfig 指向 reg
 npm pack --dry-run   # 只看打包内容，不发布
 ```
 
+## 更新日志
+
+### 0.1.1
+
+- 修复 0.2.2 起自定义字体无法进入会话内容（输入框、模型回复）的问题。0.2.2 把 `--dsw-font-family` / `--ds-font-family-code` 从 `:root` 移到 `body` 重新派生，旧版只写在 `html` 上的值在 `body` 层被覆盖。现在变量同时写到 `html, body`，并补写 0.2.2 新增的 `--dsh-font-family-text` / `--dsh-font-family-code` 钩子。
+- 设置行文案补充实际覆盖范围（会话内容、工具输出），并说明与官方字体设置的关系。
+
 ## 结构
 
 | 文件 | 作用 |
@@ -123,7 +134,7 @@ node test/client-module.check.mjs
 
 ## 已知限制
 
-- **终端不跟随**：侧边栏终端的等宽字体在 Harness 里是写死的，插件无法在不改官方代码的前提下覆盖它。
+- **终端不跟随**：0.2.2 起终端字体由 Host 设置（终端字体输入框）经 `theme.fontFamilies.terminal` 直接交给 xterm，不读 CSS 变量，插件无法覆盖。旧版本同样写死。
 - 首屏闪烁：Harness 官方字体变量在客户端启动时才注入，因此冷启动的首帧可能先用系统字体，随后切换。桌面端的独立欢迎窗口使用同一套变量，也会跟随本设置。
 - 设置只作用于当前浏览器来源（`localStorage` 按 origin 隔离）；桌面窗口与浏览器标签各自保存自己的偏好。
 - 未做字体可用性检测：填了系统里不存在的字体名时，浏览器会按字体栈继续回退到后面的候选或默认字体；此时可打开「强制覆盖组件字体」排查是否是组件自身字体规则导致的。

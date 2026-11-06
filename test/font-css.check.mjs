@@ -38,26 +38,44 @@ const both = buildFontCss({
   monoFont: '"JetBrains Mono", monospace',
   force: false,
 });
+assert.ok(
+  both.includes('--dsh-font-family-text: Inter, sans-serif !important;'),
+  'declares the 0.2.2 text font-list hook',
+);
+assert.ok(
+  both.includes('--dsh-font-family-code: "JetBrains Mono", monospace !important;'),
+  'declares the 0.2.2 code font-list hook',
+);
 assert.ok(both.includes('--ds-font-family-code: "JetBrains Mono", monospace !important;'), 'declares the mono variable');
 assert.ok(
   both.includes('--dsw-font-markdown-code-font-family: "JetBrains Mono", monospace !important;'),
   'declares the markdown code variable',
 );
 assert.ok(both.includes('--dsw-font-family: Inter, sans-serif !important;'), 'declares the UI variable');
+assert.ok(both.startsWith('html, body {'), 'the variable rule is grounded on body too, not html alone');
+assert.ok(
+  /^html, body \{\n[\s\S]*--dsw-font-family: Inter, sans-serif !important;/.test(both),
+  'the body-level variable rule is what makes 0.2.2 conversation content follow the stack',
+);
 assert.ok(both.includes('html, body { font-family: Inter, sans-serif; }'), 'grades the UI stack on html and body');
 assert.ok(!both.includes('!important; }'), 'does not force without the flag');
 assert.equal(both.split('{').length - 1, 2, 'emits exactly the two intended rules');
 
 const forced = buildFontCss({ enabled: true, uiFont: 'Inter', monoFont: '', force: true });
 assert.ok(forced.includes('html, body { font-family: Inter !important; }'), 'forces the UI rule only when asked');
-assert.ok(!forced.includes('--ds-font-family-code'), 'omits the mono variable when the mono field is empty');
+assert.ok(forced.includes('--dsh-font-family-text: Inter !important;'), 'still declares the text hook when forced');
+assert.ok(!forced.includes('--dsh-font-family-code'), 'omits the code hook when the mono field is empty');
 
 const uiOnly = buildFontCss({ enabled: true, uiFont: 'Inter', monoFont: '' });
 assert.ok(uiOnly.includes('--dsw-font-family: Inter !important;'), 'still emits the UI variable alone');
+assert.ok(uiOnly.includes('--dsh-font-family-text: Inter !important;'), 'still emits the text hook alone');
+assert.ok(!uiOnly.includes('--ds-font-family-code:'), 'omits the mono variable when the mono field is empty');
 
 const monoOnly = buildFontCss({ enabled: true, uiFont: '', monoFont: 'Menlo' });
+assert.ok(!monoOnly.includes('--dsh-font-family-text:'), 'omits the text hook when the UI field is empty');
 assert.ok(!monoOnly.includes('--dsw-font-family:'), 'omits the UI variable when the UI field is empty');
-assert.ok(!monoOnly.includes('html, body'), 'skips the UI family rule when the UI field is empty');
+assert.ok(!monoOnly.includes('html, body { font-family:'), 'skips the UI family rule when the UI field is empty');
+assert.ok(monoOnly.includes('--dsh-font-family-code: Menlo !important;'), 'keeps the code hook alone');
 assert.ok(monoOnly.includes('--ds-font-family-code: Menlo !important;'), 'keeps the mono variable alone');
 
 // ------------------------------------------------------------ injection safety
@@ -72,6 +90,10 @@ const hostile = buildFontCss({
 assert.ok(!/}\s*html\s*\{\s*background/.test(hostile), 'a hostile stack cannot open a new rule');
 assert.ok(!hostile.includes('background:'), 'a hostile stack cannot declare a property');
 assert.equal(hostile.split('{').length - 1, 2, 'no extra rule braces appear');
+assert.ok(
+  hostile.includes('--dsh-font-family-text: Inter html background url(evil) !important;'),
+  'the residue is inert text inside the text hook',
+);
 assert.ok(
   hostile.includes('--dsw-font-family: Inter html background url(evil) !important;'),
   'the residue is inert text inside the UI variable',
@@ -142,8 +164,11 @@ for (const name of ['sanitizeFontStack', 'buildFontCss']) {
   );
 }
 assert.ok(clientSource.includes('const UNSAFE_CSS = /[;:{}<>@]/g;'), 'the character class matches on both halves');
+assert.ok(clientSource.includes('--dsh-font-family-text:'), 'the Client half declares the 0.2.2 text hook');
+assert.ok(clientSource.includes('--dsh-font-family-code:'), 'the Client half declares the 0.2.2 code hook');
 assert.ok(clientSource.includes('--ds-font-family-code:'), 'the Client half declares the same mono variable');
 assert.ok(clientSource.includes('--dsw-font-markdown-code-font-family:'), 'the Client half declares the same markdown code variable');
 assert.ok(clientSource.includes('html, body { font-family:'), 'the Client half declares the same UI family rule');
+assert.ok(clientSource.includes('html, body {\\n'), 'the Client half grounds its variables on html and body');
 
 console.log('all checks passed');

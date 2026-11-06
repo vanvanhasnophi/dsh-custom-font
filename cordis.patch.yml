@@ -1,7 +1,7 @@
 # dsh-font-stack bundle patch: inserts the font-stack row into the profile's
-# plugin roster. The row is a normal bundle entry, so the same patch reaches the
-# Host Loader (Config schema + index <style> injection) and the browser roster
-# (the live stylesheet and the Settings -> General row).
+# plugin roster. The row is a normal bundle entry: the Host half is a no-op
+# activation anchor with no state, and the browser roster carries the live
+# stylesheet and the Settings -> General row.
 - insert:
     - id: dsh-font-stack
       name: 'dsh-font-stack'

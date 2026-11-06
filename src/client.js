@@ -78,14 +78,14 @@ window.__ModuleLoader__.load({
     /** Simplified Chinese copy (key-set source of truth). */
     const zh = {
       'row.title': '字体',
-      'row.description': '用标准 CSS 字体栈覆盖界面与等宽字体，Web 与桌面端同时生效。',
+      'row.description': '用标准 CSS 字体栈覆盖界面、会话内容与等宽字体，Web 与桌面端同时生效。',
       'row.enable': '启用自定义字体',
       'row.enabled': '已启用',
       'row.disabled': '已关闭（保持默认）',
       'row.ui': '界面字体栈',
-      'row.uiHint': '界面正文、侧边栏与设置页面使用。',
+      'row.uiHint': '界面正文、侧边栏、设置页面与会话内容（输入框、回复）使用。',
       'row.mono': '等宽字体栈',
-      'row.monoHint': '代码块与行内代码使用。',
+      'row.monoHint': '代码块、行内代码与工具输出使用。',
       'row.reset': '恢复默认',
       'row.presets': '快速预设',
       'row.preview': '预览',
@@ -103,14 +103,14 @@ window.__ModuleLoader__.load({
     const en = {
       'row.title': 'Fonts',
       'row.description':
-        'Override the interface and monospace fonts with any standard CSS font stack. Applies to both the Web and desktop shells.',
+        'Override interface, conversation, and monospace fonts with any standard CSS font stack. Applies to both the Web and desktop shells.',
       'row.enable': 'Use custom fonts',
       'row.enabled': 'Enabled',
       'row.disabled': 'Off (shipped defaults)',
       'row.ui': 'Interface font stack',
-      'row.uiHint': 'Used by body copy, the sidebar, and settings pages.',
+      'row.uiHint': 'Used by body copy, the sidebar, settings pages, and conversation content (composer and replies).',
       'row.mono': 'Monospace font stack',
-      'row.monoHint': 'Used by code blocks and inline code.',
+      'row.monoHint': 'Used by code blocks, inline code, and tool output.',
       'row.reset': 'Reset to defaults',
       'row.presets': 'Presets',
       'row.preview': 'Preview',
@@ -178,6 +178,14 @@ window.__ModuleLoader__.load({
      * Build the override stylesheet for one preferences snapshot. Byte-identical
      * to the canonical Host implementation; `test/font-css.check.mjs` fails if the
      * two ever drift apart.
+     *
+     * It writes both generations of harness font variables on `html, body`:
+     * `--dsw-font-family` / `--ds-font-family-code` (the tokens components read,
+     * re-derived on `body` since 0.2.2, which is why a value on `html` alone no
+     * longer reached the composer or Markdown replies) and the 0.2.2 user hooks
+     * `--dsh-font-family-text` / `--dsh-font-family-code` (written inline by the
+     * native Font settings, so this sheet must claim them too to stay
+     * authoritative). `!important` on `body` outranks the base `body` rule.
      * @param preferences - current preference values.
      * @returns a stylesheet string, or an empty string when nothing is overridden.
      */
@@ -189,13 +197,17 @@ window.__ModuleLoader__.load({
       if (ui === '' && mono === '') return '';
 
       const declarations = [];
+      if (ui !== '') {
+        declarations.push(`  --dsh-font-family-text: ${ui} !important;`);
+        declarations.push(`  --dsw-font-family: ${ui} !important;`);
+      }
       if (mono !== '') {
+        declarations.push(`  --dsh-font-family-code: ${mono} !important;`);
         declarations.push(`  --ds-font-family-code: ${mono} !important;`);
         declarations.push(`  --dsw-font-markdown-code-font-family: ${mono} !important;`);
       }
-      if (ui !== '') declarations.push(`  --dsw-font-family: ${ui} !important;`);
 
-      const rules = [`html {\n${declarations.join('\n')}\n}`];
+      const rules = [`html, body {\n${declarations.join('\n')}\n}`];
       if (ui !== '') {
         rules.push(`html, body { font-family: ${ui}${preferences.force === true ? ' !important' : ''}; }`);
       }

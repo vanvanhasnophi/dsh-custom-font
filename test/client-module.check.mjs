@@ -198,8 +198,20 @@ secondExported.apply(ctx);
 const liveSheet = appended.find((el) => el.attributes['data-plugin-css'] === 'dsh-font-stack/live');
 assert.notEqual(liveSheet, undefined, 'an enabled stored section paints at boot, before the settings panel opens');
 assert.ok(
+  liveSheet.textContent.startsWith('html, body {'),
+  'the live sheet grounds its variables on body, where 0.2.2 re-derives the font tokens',
+);
+assert.ok(
+  liveSheet.textContent.includes('--dsh-font-family-text: Inter, sans-serif !important;'),
+  'the boot sheet carries the stored text font-list hook',
+);
+assert.ok(
   liveSheet.textContent.includes('--dsw-font-family: Inter, sans-serif !important;'),
   'the boot sheet carries the stored UI stack',
+);
+assert.ok(
+  liveSheet.textContent.includes('--dsh-font-family-code: "JetBrains Mono", monospace !important;'),
+  'the boot sheet carries the stored code font-list hook',
 );
 assert.ok(
   liveSheet.textContent.includes('--ds-font-family-code: "JetBrains Mono", monospace !important;'),

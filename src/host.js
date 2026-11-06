@@ -60,17 +60,29 @@ export function sanitizeFontStack(value) {
 /**
  * Build the font override stylesheet for one preferences snapshot.
  *
- * Both harness font variables are declared with `!important` on `html`: the
- * shipped base sheet declares them on `:root`, and `html` outranks `:root` on
- * specificity, so a user value wins without depending on stylesheet order.
- * `font-family` is re-stated on `html, body` because `body` reads
- * `var(--dsw-font-family, <fallbacks>)` and every markdown heading uses the
- * `font:` shorthand (which does not inherit).
+ * The sheet writes both generations of Harness font variables, on `html, body`:
+ *
+ * - `--dsw-font-family` and `--ds-font-family-code` are the tokens every
+ *   shipped component reads. Up to 0.2.1 the base sheet declared them on
+ *   `:root`, so a value on `html` reached the whole document. 0.2.2 re-derives
+ *   them on `body` from the user font-list hooks, and a declaration on `body`
+ *   beats an inherited value from `html` no matter how important the latter is.
+ *   Writing the same tokens on `body` again, with `!important`, outranks that
+ *   `body` rule and restores the override for the composer and Markdown replies.
+ * - `--dsh-font-family-text` and `--dsh-font-family-code` are the 0.2.2 user
+ *   font-list hooks. The native Font settings write them inline on `body`;
+ *   writing them here keeps this plugin authoritative when both surfaces are
+ *   used, and keeps every consumer that re-derives from the hooks in step.
+ *
+ * `font-family` is re-stated on `html, body` for elements that read neither
+ * token, and because Markdown headings use the `font:` shorthand (which does
+ * not inherit).
  *
  * Deliberately untouched: KaTeX's own math faces (`.katex` sets its family
  * without `!important`, so forcing a family on descendants would break formulas)
- * and xterm's glyph-metric rendering. The terminal honours the monospace stack
- * through `--ds-font-family-code` instead.
+ * and xterm's glyph-metric rendering. Since 0.2.2 the terminal font comes from
+ * the Host settings store directly, not from CSS, so this plugin still cannot
+ * change it.
  *
  * This is the canonical implementation, exercised by `test/font-css.check.mjs`.
  * The Client half carries a byte-identical copy because `window.__ModuleLoader__`
@@ -86,15 +98,17 @@ export function buildFontCss(preferences) {
   if (ui === '' && mono === '') return '';
 
   const declarations = [];
+  if (ui !== '') {
+    declarations.push(`  --dsh-font-family-text: ${ui} !important;`);
+    declarations.push(`  --dsw-font-family: ${ui} !important;`);
+  }
   if (mono !== '') {
+    declarations.push(`  --dsh-font-family-code: ${mono} !important;`);
     declarations.push(`  --ds-font-family-code: ${mono} !important;`);
     declarations.push(`  --dsw-font-markdown-code-font-family: ${mono} !important;`);
   }
-  // `--dsw-font-family` also feeds `--dsw-font-family-brand`, so the wordmark
-  // follows the UI face unless a future field targets the brand face directly.
-  if (ui !== '') declarations.push(`  --dsw-font-family: ${ui} !important;`);
 
-  const rules = [`html {\n${declarations.join('\n')}\n}`];
+  const rules = [`html, body {\n${declarations.join('\n')}\n}`];
   if (ui !== '') {
     rules.push(`html, body { font-family: ${ui}${preferences.force === true ? ' !important' : ''}; }`);
   }
